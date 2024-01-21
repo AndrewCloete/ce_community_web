@@ -15,6 +15,36 @@ interface Answers {
   [key: string]: string;
 }
 
+const platform_langs: Record<string, Record<Language, string>> = {
+  print: {
+    en: "Print",
+    af: "Druk",
+  },
+  school: {
+    en: "School",
+    af: "Skool",
+  },
+  class: {
+    en: "Class",
+    af: "Klas",
+  },
+  term: {
+    en: "Term",
+    af: "Termyn",
+  },
+  question: {
+    en: "Question",
+    af: "Vraag",
+  },
+};
+
+function lang(name: string, l: Language): string {
+  if (!Object.keys(platform_langs).includes(name)) {
+    return "????";
+  }
+  return platform_langs[name][l];
+}
+
 const questions: Record<Language, Questions> = {
   en: {
     1: "I have felt cheerful and in good spirits",
@@ -53,16 +83,16 @@ const answers: Record<Language, Answers> = {
 
 function QuestionnaireTable(props: { lanuage: Language }) {
   return (
-    <div>
+    <div style={{ display: "flex", justifyContent: "center" }}>
       <table>
         <thead>
           <tr>
-            <th className="tcol-question">Questions</th>
+            <th className="tcol-question">{lang("question", props.lanuage)}</th>
             {[5, 4, 3, 2, 1].map((i) => {
               const answer = answers[props.lanuage][i];
               return (
                 <th className="tcol-ans" key={i}>
-                  {answer + " (" + i + ")"} 
+                  {answer + " (" + i + ")"}
                 </th>
               );
             })}
@@ -74,8 +104,8 @@ function QuestionnaireTable(props: { lanuage: Language }) {
               <tr key={questionKey}>
                 <td>{question}</td>
                 {Object.keys(answers[props.lanuage]).map((answerKey) => (
-                  <td key={answerKey}>
-                    {/* You can place your input fields or data here */}
+                  <td key={answerKey} className="tick-box-td">
+                    <div className="tick-box"> </div>
                   </td>
                 ))}
               </tr>
@@ -87,47 +117,51 @@ function QuestionnaireTable(props: { lanuage: Language }) {
   );
 }
 
-function App() {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
+function Selectors(props: {
+  selectedLanguage: Language;
+  setSelectedLanguage: (lang: Language) => void;
+}) {
   const [selectedSchool, setSelectedSchool] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedTerm, setSelectedTerm] = useState<Term>("T1");
 
   return (
-    <div>
+    <div className="selector-block">
       <div className="print-selectors">
-        <div>{"School: " + selectedSchool}</div>
-        <div>{"Class: " + selectedClass}</div>
-        <div>{"Term: " + selectedTerm}</div>
+        <div className="selector">{lang("school",props.selectedLanguage) + ": " + selectedSchool}</div>
+        <div className="selector">{lang("class", props.selectedLanguage) + ": " + selectedClass}</div>
+        <div className="selector">{lang("term", props.selectedLanguage) + ": " + selectedTerm}</div>
       </div>
       <div className="selectors">
-        <label>
+        <label className="selector">
           <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value as Language)}
+            value={props.selectedLanguage}
+            onChange={(e) =>
+              props.setSelectedLanguage(e.target.value as Language)
+            }
           >
             <option value="en">English</option>
             <option value="af">Afrikaans</option>
           </select>
         </label>
-        <label>
-          School:
+        <label className="selector">
+          {lang("school", props.selectedLanguage)}:
           <input
             type="text"
             value={selectedSchool}
             onChange={(e) => setSelectedSchool(e.target.value)}
           ></input>
         </label>
-        <label>
-          Class:
+        <label className="selector">
+          {lang("class", props.selectedLanguage)}:
           <input
             type="text"
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
           ></input>
         </label>
-        <label>
-          Term:
+        <label className="selector">
+          {lang("term", props.selectedLanguage)}:
           <select
             value={selectedTerm}
             onChange={(e) => setSelectedTerm(e.target.value as Term)}
@@ -142,25 +176,41 @@ function App() {
           </select>
         </label>
       </div>
-      <QuestionnaireTable lanuage={selectedLanguage} />
       <div className="qrcode">
         <QRCode
           value={JSON.stringify({
             school: selectedSchool,
             class: selectedClass,
             term: selectedTerm,
-            lang: selectedLanguage,
+            lang: props.selectedLanguage,
           })}
-          viewBox={`0 0 100 100`}
+          size={128}
         />
       </div>
-      <button
-        onClick={() => {
-          window.print();
-        }}
-      >
-        Print
-      </button>
+    </div>
+  );
+}
+
+function App() {
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("en");
+  return (
+    <div className="outer">
+      <div className="app">
+        <div>
+          <Selectors
+            selectedLanguage={selectedLanguage}
+            setSelectedLanguage={setSelectedLanguage}
+          />
+        </div>
+        <QuestionnaireTable lanuage={selectedLanguage} />
+        <button
+          onClick={() => {
+            window.print();
+          }}
+        >
+          {lang("print", selectedLanguage)}
+        </button>
+      </div>
     </div>
   );
 }
